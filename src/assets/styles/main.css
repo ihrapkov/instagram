@@ -1,0 +1,172 @@
+:root {
+  --gradient: linear-gradient(
+    #405de6 0.01%,
+    #833ab4 21.88%,
+    #c13584 47.92%,
+    #e1306c 67.71%,
+    #fd1d1d 84.37%
+  );
+}
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: "Raleway", sans-serif;
+  box-sizing: border-box;
+}
+
+.wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1;
+  max-width: 630px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+  .content {
+    padding: 15px 0;
+    max-width: 100%;
+  }
+  
+  .card {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+  
+  .stories-container {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    padding: 12px;
+  }
+}
+
+.card {
+  width: 100%;
+  max-width: 630px;
+  margin-bottom: 20px;
+  background: white;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+}
+
+.header-card {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+  padding: 14px;
+}
+
+.user-foto img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.time {
+  color: #8e8e8e;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.location {
+  font-size: 12px;
+  font-weight: 400;
+  color: #405de6;
+}
+
+.foto-card {
+  width: 100%;
+  background: #fafafa;
+}
+
+.foto-card img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.button-card {
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.thee-button {
+  display: flex;
+  gap: 16px;
+}
+
+.button-card i {
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.button-card span {
+  display: flex;
+  gap: 16px;
+}
+
+.one-button {
+  display: flex;
+}
+
+.like-card {
+  padding: 0 14px 12px;
+}
+
+.like-card-text {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.like-count {
+  margin-right: 4px;
+}
+
+.coment-card {
+  border-top: 1px solid #efefef;
+  padding: 12px 14px;
+}
+
+.coment-card input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+}
+
+.description-card {
+  padding: 0 14px 12px;
+}
+
+.description-card .user-name {
+  display: inline;
+  margin-right: 8px;
+}
+
+.caption {
+  font-size: 14px;
+}

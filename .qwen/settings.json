@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sc *)",
+      "Bash(node *)",
+      "Bash(netstat *)",
+      "Bash(mongosh *)",
+      "Bash(set *)",
+      "Bash(python *)",
+      "Bash(const *)",
+      "Bash('password123', *)",
+      "Bash(console.log)",
+      "Bash(hash1, *)",
+      "Bash(\\\")",
+      "Bash(findstr *)",
+      "Bash(curl *)",
+      "Bash(npm run *)",
+      "Bash(timeout *)",
+      "Bash(ping *)",
+      "Bash(taskkill *)",
+      "Bash(npm install *)",
+      "Bash(dir *)",
+      "Bash(npm ls *)",
+      "Bash(git config *)",
+      "Bash(git rm *)",
+      "Bash(del *)",
+      "Bash(git add *)"
+    ]
+  },
+  "$version": 3
+}
