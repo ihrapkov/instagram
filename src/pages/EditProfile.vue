@@ -1,157 +1,163 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { userAPI } from '@/api/axios'
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { userAPI } from "@/api/axios";
+import { assetUrl } from "@/utils/url";
+import { notifyError } from "@/utils/notify";
 
-const router = useRouter()
-const authStore = useAuthStore()
+const router = useRouter();
+const authStore = useAuthStore();
 
-const fileInput = ref(null)
-const loading = ref(true)
-const saving = ref(false)
-const error = ref('')
-const success = ref('')
+const fileInput = ref(null);
+const loading = ref(true);
+const saving = ref(false);
+const error = ref("");
+const success = ref("");
 
 // Данные формы
 const formData = ref({
-  username: '',
-  fullName: '',
-  bio: '',
-  gender: '',
-  email: '',
-  newPassword: '',
-  confirmPassword: '',
-  avatar: ''
-})
+  username: "",
+  fullName: "",
+  bio: "",
+  gender: "",
+  email: "",
+  newPassword: "",
+  confirmPassword: "",
+  avatar: "",
+});
 
-const bioCount = computed(() => formData.value.bio.length)
-const bioLimit = 150
+const bioCount = computed(() => formData.value.bio.length);
+const bioLimit = 150;
 
 const avatarUrl = computed(() => {
-  if (!formData.value.avatar) return '/img/foto.jpg'
-  if (formData.value.avatar.startsWith('http')) return formData.value.avatar
-  return `http://localhost:5000${formData.value.avatar}`
-})
+  return assetUrl(formData.value.avatar);
+});
 
 // Загрузка данных профиля
 async function loadProfile() {
-  loading.value = true
-  error.value = ''
+  loading.value = true;
+  error.value = "";
 
   try {
-    const username = authStore.currentUser?.username
-    const response = await userAPI.getProfile(username)
-    const user = response.data.user
+    const username = authStore.currentUser?.username;
+    const response = await userAPI.getProfile(username);
+    const user = response.data.user;
 
-    formData.value.username = user.username || ''
-    formData.value.fullName = user.fullName || ''
-    formData.value.bio = user.bio || ''
-    formData.value.gender = user.gender || ''
-    formData.value.email = user.email || ''
-    formData.value.avatar = user.avatar || ''
+    formData.value.username = user.username || "";
+    formData.value.fullName = user.fullName || "";
+    formData.value.bio = user.bio || "";
+    formData.value.gender = user.gender || "";
+    formData.value.email = user.email || "";
+    formData.value.avatar = user.avatar || "";
   } catch (err) {
-    error.value = err.response?.data?.message || 'Ошибка загрузки профиля'
+    error.value = err.response?.data?.message || "Ошибка загрузки профиля";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 // Загрузка аватара
 function handleFileChange(event) {
-  const file = event.target.files[0]
-  if (file && file.type.startsWith('image/')) {
-    uploadAvatar(file)
+  const file = event.target.files[0];
+  if (file && file.type.startsWith("image/")) {
+    uploadAvatar(file);
   }
 }
 
 async function uploadAvatar(file) {
-  const formDataUpload = new FormData()
-  formDataUpload.append('avatar', file)
+  const formDataUpload = new FormData();
+  formDataUpload.append("avatar", file);
 
   try {
-    const response = await userAPI.uploadAvatar(formDataUpload)
-    formData.value.avatar = response.data.user.avatar
+    const response = await userAPI.uploadAvatar(formDataUpload);
+    formData.value.avatar = response.data.user.avatar;
   } catch (err) {
-    console.error('Upload avatar error:', err)
-    alert('Ошибка при загрузке аватара')
+    console.error("Upload avatar error:", err);
+    notifyError("Ошибка при загрузке аватара");
   }
 
   if (fileInput.value) {
-    fileInput.value.value = ''
+    fileInput.value.value = "";
   }
 }
 
 // Сохранение изменений
 async function saveProfile() {
-  saving.value = true
-  error.value = ''
-  success.value = ''
+  saving.value = true;
+  error.value = "";
+  success.value = "";
 
   // Валидация
-  if (formData.value.newPassword && formData.value.newPassword !== formData.value.confirmPassword) {
-    error.value = 'Пароли не совпадают'
-    saving.value = false
-    return
+  if (
+    formData.value.newPassword &&
+    formData.value.newPassword !== formData.value.confirmPassword
+  ) {
+    error.value = "Пароли не совпадают";
+    saving.value = false;
+    return;
   }
 
   if (formData.value.bio.length > bioLimit) {
-    error.value = `Графа "О себе" не должна превышать ${bioLimit} символов`
-    saving.value = false
-    return
+    error.value = `Графа "О себе" не должна превышать ${bioLimit} символов`;
+    saving.value = false;
+    return;
   }
 
   try {
     const updateData = {
       fullName: formData.value.fullName,
       bio: formData.value.bio,
-      gender: formData.value.gender
-    }
+      gender: formData.value.gender,
+    };
 
     // Если меняется email
-    if (formData.value.email && formData.value.email !== authStore.currentUser?.email) {
-      updateData.email = formData.value.email
+    if (
+      formData.value.email &&
+      formData.value.email !== authStore.currentUser?.email
+    ) {
+      updateData.email = formData.value.email;
     }
 
     // Если меняется пароль
     if (formData.value.newPassword) {
-      updateData.password = formData.value.newPassword
+      updateData.password = formData.value.newPassword;
     }
 
-    await userAPI.updateProfile(updateData)
+    await userAPI.updateProfile(updateData);
 
     // Обновляем данные в хранилище
     if (authStore.user) {
-      authStore.user.fullName = formData.value.fullName
-      authStore.user.bio = formData.value.bio
-      authStore.user.gender = formData.value.gender
+      authStore.user.fullName = formData.value.fullName;
+      authStore.user.bio = formData.value.bio;
+      authStore.user.gender = formData.value.gender;
       if (formData.value.email) {
-        authStore.user.email = formData.value.email
+        authStore.user.email = formData.value.email;
       }
-      localStorage.setItem('user', JSON.stringify(authStore.user))
+      localStorage.setItem("user", JSON.stringify(authStore.user));
     }
 
-    success.value = 'Изменения сохранены'
+    success.value = "Изменения сохранены";
 
     // Перенаправляем на профиль через 1 секунду
     setTimeout(() => {
-      router.push(`/profile/${formData.value.username}`)
-    }, 1000)
+      router.push(`/profile/${formData.value.username}`);
+    }, 1000);
   } catch (err) {
-    error.value = err.response?.data?.message || 'Ошибка при сохранении'
+    error.value = err.response?.data?.message || "Ошибка при сохранении";
   } finally {
-    saving.value = false
+    saving.value = false;
   }
 }
 
 // Отмена
 function cancel() {
-  router.back()
+  router.back();
 }
 
 onMounted(() => {
-  loadProfile()
-})
+  loadProfile();
+});
 </script>
 
 <template>
@@ -173,7 +179,11 @@ onMounted(() => {
         <!-- Аватар -->
         <div class="form-section">
           <div class="avatar-section">
-            <img :src="avatarUrl" :alt="formData.username" class="avatar-preview" />
+            <img
+              :src="avatarUrl"
+              :alt="formData.username"
+              class="avatar-preview"
+            />
             <div class="avatar-actions">
               <input
                 ref="fileInput"
@@ -269,7 +279,9 @@ onMounted(() => {
 
         <!-- Подтверждение пароля -->
         <div class="form-section">
-          <label class="form-label" for="confirmPassword">Подтвердите пароль</label>
+          <label class="form-label" for="confirmPassword"
+            >Подтвердите пароль</label
+          >
           <input
             id="confirmPassword"
             v-model="formData.confirmPassword"
@@ -282,7 +294,7 @@ onMounted(() => {
         <!-- Кнопка сохранения -->
         <div class="form-actions">
           <button type="submit" class="save-btn" :disabled="saving">
-            {{ saving ? 'Сохранение...' : 'Сохранить' }}
+            {{ saving ? "Сохранение..." : "Сохранить" }}
           </button>
         </div>
       </form>
@@ -309,8 +321,12 @@ onMounted(() => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .edit-profile-header {

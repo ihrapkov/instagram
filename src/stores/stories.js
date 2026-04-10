@@ -31,9 +31,7 @@ export const useStoriesStore = defineStore("stories", {
   actions: {
     async fetchStories() {
       try {
-        console.log("Fetching stories from API...");
         const response = await storyAPI.getAll();
-        console.log("Stories from API:", response.data);
 
         this.storiesFeed = response.data || [];
         return { success: true };

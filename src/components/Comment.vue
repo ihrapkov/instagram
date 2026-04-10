@@ -1,102 +1,105 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useCommentsStore } from '@/stores/comments'
+import { ref, computed, onMounted } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { useCommentsStore } from "@/stores/comments";
+import { assetUrl } from "@/utils/url";
+import { notifyError } from "@/utils/notify";
 
 const props = defineProps({
   postId: {
     type: String,
-    required: true
+    required: true,
   },
   comments: {
     type: Array,
-    default: () => []
-  }
-})
+    default: () => [],
+  },
+});
 
-const emit = defineEmits(['comment-added', 'comment-deleted'])
+const emit = defineEmits(["comment-added", "comment-deleted"]);
 
-const authStore = useAuthStore()
-const commentsStore = useCommentsStore()
+const authStore = useAuthStore();
+const commentsStore = useCommentsStore();
 
-const newComment = ref('')
-const isSubmitting = ref(false)
+const newComment = ref("");
+const isSubmitting = ref(false);
 
-const currentUser = computed(() => authStore.currentUser)
+const currentUser = computed(() => authStore.currentUser);
 
 const postComments = computed(() => {
   // Если комментарии переданы напрямую, используем их
   if (props.comments && props.comments.length > 0) {
-    return props.comments
+    return props.comments;
   }
   // Иначе берём из store
-  return commentsStore.getCommentsByPost(props.postId)
-})
+  return commentsStore.getCommentsByPost(props.postId);
+});
 
 // Загрузка комментариев при монтировании
 onMounted(async () => {
   if (props.comments.length === 0) {
-    await commentsStore.fetchComments(props.postId)
+    await commentsStore.fetchComments(props.postId);
   }
-})
+});
 
 // Добавление комментария
 async function submitComment() {
-  if (!newComment.value.trim() || !currentUser.value) return
+  if (!newComment.value.trim() || !currentUser.value) return;
 
-  isSubmitting.value = true
+  isSubmitting.value = true;
 
-  const result = await commentsStore.addComment(props.postId, newComment.value.trim())
+  const result = await commentsStore.addComment(
+    props.postId,
+    newComment.value.trim(),
+  );
 
-  isSubmitting.value = false
+  isSubmitting.value = false;
 
   if (result.success) {
-    newComment.value = ''
-    emit('comment-added', result.comment)
+    newComment.value = "";
+    emit("comment-added", result.comment);
   } else {
-    alert(result.message)
+    notifyError(result.message);
   }
 }
 
 // Удаление комментария
 async function deleteComment(commentId) {
-  if (!confirm('Удалить комментарий?')) return
+  if (!confirm("Удалить комментарий?")) return;
 
-  const result = await commentsStore.deleteComment(props.postId, commentId)
+  const result = await commentsStore.deleteComment(props.postId, commentId);
 
   if (result.success) {
-    emit('comment-deleted', commentId)
+    emit("comment-deleted", commentId);
   } else {
-    alert(result.message)
+    notifyError(result.message);
   }
 }
 
 // Проверка, является ли пользователь владельцем комментария
 function isCommentOwner(commentUserId) {
-  return currentUser.value && commentUserId === currentUser.value._id
+  return currentUser.value && commentUserId === currentUser.value._id;
 }
 
 // Форматирование времени
 function timeAgo(dateString) {
-  if (!dateString) return ''
-  const now = new Date()
-  const date = new Date(dateString)
-  const diffMs = now - date
-  const diffMinutes = Math.floor(diffMs / (1000 * 60))
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
+  if (!dateString) return "";
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffMs = now - date;
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMinutes < 1) return 'только что'
-  if (diffMinutes < 60) return `${diffMinutes} мин.`
-  if (diffHours < 24) return `${diffHours} ч.`
-  return `${diffDays} д.`
+  if (diffMinutes < 1) return "только что";
+  if (diffMinutes < 60) return `${diffMinutes} мин.`;
+  if (diffHours < 24) return `${diffHours} ч.`;
+  return `${diffDays} д.`;
 }
 
 const avatarUrl = (comment) => {
-  if (!comment.user?.avatar) return '/img/foto.jpg'
-  if (comment.user.avatar.startsWith('http')) return comment.user.avatar
-  return `http://localhost:5000${comment.user.avatar}`
-}
+  return assetUrl(comment.user?.avatar);
+};
 </script>
 
 <template>
@@ -108,8 +111,15 @@ const avatarUrl = (comment) => {
         :key="comment._id"
         class="comment-item"
       >
-        <router-link :to="`/profile/${comment.user?.username}`" class="comment-user">
-          <img :src="avatarUrl(comment)" :alt="comment.user?.username" class="comment-avatar" />
+        <router-link
+          :to="`/profile/${comment.user?.username}`"
+          class="comment-user"
+        >
+          <img
+            :src="avatarUrl(comment)"
+            :alt="comment.user?.username"
+            class="comment-avatar"
+          />
           <span class="comment-username">{{ comment.user?.username }}</span>
         </router-link>
         <div class="comment-content">
@@ -146,7 +156,7 @@ const avatarUrl = (comment) => {
         :disabled="!newComment.trim() || isSubmitting || !currentUser"
         class="comment-submit"
       >
-        {{ isSubmitting ? '...' : 'Опубликовать' }}
+        {{ isSubmitting ? "..." : "Опубликовать" }}
       </button>
     </form>
   </div>

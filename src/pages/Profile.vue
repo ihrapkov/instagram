@@ -4,6 +4,8 @@ import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { usePostsStore } from "@/stores/posts";
 import { userAPI, postAPI, commentAPI } from "@/api/axios";
+import { assetUrl } from "@/utils/url";
+import { notifyError } from "@/utils/notify";
 
 const route = useRoute();
 const router = useRouter();
@@ -241,7 +243,7 @@ async function toggleFollow() {
     }
   } catch (err) {
     console.error("Follow error:", err);
-    alert("Ошибка при подписке/отписке");
+    notifyError("Ошибка при подписке/отписке");
   }
 }
 
@@ -253,10 +255,17 @@ const isFollowing = computed(() => {
 });
 
 const avatarUrl = computed(() => {
-  if (!profile.value?.avatar) return "/img/foto.jpg";
-  if (profile.value.avatar.startsWith("http")) return profile.value.avatar;
-  return `http://localhost:5000${profile.value.avatar}`;
+  return assetUrl(profile.value?.avatar);
 });
+
+// Хелперы для шаблона
+function getPostImageUrl(image) {
+  return assetUrl(image);
+}
+
+function getUserAvatarUrl(avatar) {
+  return assetUrl(avatar);
+}
 
 // Загрузка аватара
 function handleFileChange(event) {
@@ -282,7 +291,7 @@ async function uploadAvatar(file) {
     // Перезагружаем профиль для обновления данных
     loadProfile();
   } else {
-    alert(result.message);
+    notifyError(result.message);
   }
 
   // Очищаем input
@@ -300,7 +309,7 @@ async function handleDeletePost(postId) {
   if (result.success) {
     posts.value = posts.value.filter((post) => post._id !== postId);
   } else {
-    alert(result.message);
+    notifyError(result.message);
   }
 }
 
@@ -399,14 +408,7 @@ onMounted(() => {
           class="post-item"
           @click="openPostModal(post)"
         >
-          <img
-            :src="
-              post.image.startsWith('http')
-                ? post.image
-                : `http://localhost:5000${post.image}`
-            "
-            :alt="'Post ' + post._id"
-          />
+          <img :src="getPostImageUrl(post.image)" :alt="'Post ' + post._id" />
           <div class="post-overlay">
             <div class="post-stats">
               <span
@@ -456,11 +458,7 @@ onMounted(() => {
             @click.stop="goToProfileFromModal(user.username)"
           >
             <img
-              :src="
-                user.avatar
-                  ? `http://localhost:5000${user.avatar}`
-                  : '/img/foto.jpg'
-              "
+              :src="getUserAvatarUrl(user.avatar)"
               :alt="user.username"
               class="modal-avatar"
             />
@@ -495,24 +493,14 @@ onMounted(() => {
         <div class="post-modal-body" v-if="selectedPost">
           <div class="post-modal-image">
             <img
-              :src="
-                selectedPost.image.startsWith('http')
-                  ? selectedPost.image
-                  : `http://localhost:5000${selectedPost.image}`
-              "
+              :src="getPostImageUrl(selectedPost.image)"
               :alt="selectedPost.caption || 'Post'"
             />
           </div>
           <div class="post-modal-info">
             <div class="post-modal-header">
               <img
-                :src="
-                  selectedPost.user?.avatar
-                    ? selectedPost.user.avatar.startsWith('http')
-                      ? selectedPost.user.avatar
-                      : `http://localhost:5000${selectedPost.user.avatar}`
-                    : '/img/foto.jpg'
-                "
+                :src="getUserAvatarUrl(selectedPost.user?.avatar)"
                 :alt="selectedPost.user?.username"
                 class="post-modal-avatar"
               />

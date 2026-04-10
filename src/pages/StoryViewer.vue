@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useStoriesStore } from "@/stores/stories";
 import StoryCarousel from "@/components/StoryCarousel.vue";
+import { assetUrl } from "@/utils/url";
 
 const storiesStore = useStoriesStore();
 
@@ -92,10 +93,17 @@ function handleStoryClick(e) {
 const storyUrl = computed(() => {
   if (!currentStory.value) return "";
   const url = currentStory.value.image;
-  if (!url) return "";
-  if (url.startsWith("http")) return url;
-  return `http://localhost:5000${url}`;
+  return assetUrl(url, "");
 });
+
+// Хелпер для шаблона
+function getAvatarUrl(avatar) {
+  return assetUrl(avatar);
+}
+
+function handleImageError(url) {
+  // Ошибка загрузки изображения
+}
 
 // Проверка, вертикальное ли изображение
 const isVertical = ref(true);
@@ -170,11 +178,7 @@ onUnmounted(() => {
     <div class="story-header">
       <div class="story-user-info">
         <img
-          :src="
-            currentUser.avatar?.startsWith('http')
-              ? currentUser.avatar
-              : `http://localhost:5000${currentUser.avatar || '/img/foto.jpg'}`
-          "
+          :src="getAvatarUrl(currentUser.avatar)"
           :alt="currentUser.username"
           class="story-avatar"
         />
@@ -202,7 +206,7 @@ onUnmounted(() => {
         class="story-media"
         :class="{ horizontal: !isVertical }"
         @load="onImageLoad"
-        @error="console.error('Ошибка загрузки изображения:', storyUrl)"
+        @error="handleImageError(storyUrl)"
       />
       <div v-else class="no-image">Нет изображения</div>
 

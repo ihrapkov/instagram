@@ -1,38 +1,63 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useSearchStore } from '@/stores/search'
-import { useAuthStore } from '@/stores/auth'
-import { userAPI } from '@/api/axios'
+import { ref, computed, watch, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useSearchStore } from "@/stores/search";
+import { useAuthStore } from "@/stores/auth";
+import { userAPI } from "@/api/axios";
+import { assetUrl } from "@/utils/url";
+import { notifyError } from "@/utils/notify";
 
-const router = useRouter()
-const searchStore = useSearchStore()
-const authStore = useAuthStore()
+const router = useRouter();
+const searchStore = useSearchStore();
+const authStore = useAuthStore();
 
 // Поисковый запрос
-const searchQuery = ref('')
-const showResults = ref(false)
+const searchQuery = ref("");
+const showResults = ref(false);
 
 // Результаты поиска
-const searchResults = computed(() => searchStore.searchResults)
-const loading = computed(() => searchStore.loading)
+const searchResults = computed(() => searchStore.searchResults);
+const loading = computed(() => searchStore.loading);
+
+// Хелпер для шаблона
+function getUserAvatarUrl(avatar) {
+  return assetUrl(avatar);
+}
 
 // Рекомендуемые аккаунты (показываем когда нет поиска)
 const suggestedAccounts = ref([
-  { id: 1, username: 'alice_wonder', avatar: '', subtitle: 'Популярно', _id: null },
-  { id: 2, username: 'john_doe', avatar: '', subtitle: 'Новый аккаунт', _id: null },
-  { id: 3, username: 'marry_jane', avatar: '', subtitle: 'Рекомендуем', _id: null }
-])
+  {
+    id: 1,
+    username: "alice_wonder",
+    avatar: "",
+    subtitle: "Популярно",
+    _id: null,
+  },
+  {
+    id: 2,
+    username: "john_doe",
+    avatar: "",
+    subtitle: "Новый аккаунт",
+    _id: null,
+  },
+  {
+    id: 3,
+    username: "marry_jane",
+    avatar: "",
+    subtitle: "Рекомендуем",
+    _id: null,
+  },
+]);
 
 // Загрузка реальных ID рекомендуемых аккаунтов
 async function loadSuggestedUsers() {
   for (const account of suggestedAccounts.value) {
     try {
-      const response = await userAPI.getProfile(account.username)
-      account._id = response.data.user._id
-      account.avatar = response.data.user.avatar || ''
+      const response = await userAPI.getProfile(account.username);
+      account._id = response.data.user._id;
+      account.avatar = response.data.user.avatar || "";
     } catch (err) {
-      console.error(`Error loading ${account.username}:`, err)
+      console.error(`Error loading ${account.username}:`, err);
     }
   }
 }
@@ -42,82 +67,85 @@ async function followSuggested(account) {
   try {
     if (!account._id) {
       // Загружаем ID если ещё не загружен
-      const response = await userAPI.getProfile(account.username)
-      account._id = response.data.user._id
+      const response = await userAPI.getProfile(account.username);
+      account._id = response.data.user._id;
     }
-    await authStore.followUser(account._id)
+    await authStore.followUser(account._id);
   } catch (err) {
-    console.error('Follow error:', err)
-    alert('Ошибка при подписке')
+    console.error("Follow error:", err);
+    notifyError("Ошибка при подписке");
   }
 }
 
 // Проверка, подписан ли на рекомендуемого
 function isFollowingSuggested(account) {
-  if (!account._id) return false
-  return authStore.currentUser?.following?.some(id => {
-    const uid = typeof id === 'string' ? id : id._id
-    return uid === account._id
-  })
+  if (!account._id) return false;
+  return authStore.currentUser?.following?.some((id) => {
+    const uid = typeof id === "string" ? id : id._id;
+    return uid === account._id;
+  });
 }
 
 // Проверка, подписан ли на пользователя из поиска
 function isFollowingUser(userId) {
-  return authStore.currentUser?.following?.some(id => {
-    const uid = typeof id === 'string' ? id : id._id
-    return uid === userId
-  })
+  return authStore.currentUser?.following?.some((id) => {
+    const uid = typeof id === "string" ? id : id._id;
+    return uid === userId;
+  });
 }
 
 // Подписка из поиска
 async function followFromSearch(user) {
   try {
-    await authStore.followUser(user._id)
+    await authStore.followUser(user._id);
   } catch (err) {
-    console.error('Follow error:', err)
-    alert('Ошибка при подписке')
+    console.error("Follow error:", err);
+    notifyError("Ошибка при подписке");
   }
 }
 
 // Поиск с задержкой
-let searchTimeout = null
+let searchTimeout = null;
 watch(searchQuery, (newQuery) => {
-  clearTimeout(searchTimeout)
+  clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    searchStore.searchUsers(newQuery)
-  }, 300)
-})
+    searchStore.searchUsers(newQuery);
+  }, 300);
+});
 
 onMounted(() => {
-  loadSuggestedUsers()
-})
+  loadSuggestedUsers();
+});
 
 // Переход к профилю
 function goToProfile(username) {
-  router.push(`/profile/${username}`)
-  searchQuery.value = ''
-  showResults.value = false
-  searchStore.clearResults()
+  router.push(`/profile/${username}`);
+  searchQuery.value = "";
+  showResults.value = false;
+  searchStore.clearResults();
 }
 
 // Проверка, является ли пользователь найденным
 function isFoundUser(userId) {
-  return authStore.currentUser?.following?.some(id => {
-    const uid = typeof id === 'string' ? id : id._id
-    return uid === userId
-  })
+  return authStore.currentUser?.following?.some((id) => {
+    const uid = typeof id === "string" ? id : id._id;
+    return uid === userId;
+  });
 }
 </script>
 
 <template>
   <div class="explore-page">
     <div class="explore-header">
-      <div class="search-container" :class="{ 'active': showResults && searchQuery }">
+      <div
+        class="search-container"
+        :class="{ active: showResults && searchQuery }"
+      >
         <i class="fa-solid fa-magnifying-glass"></i>
         <input
           v-model="searchQuery"
           @focus="showResults = true"
-          @blur="setTimeout(() => showResults = false, 200)"
+          @blur="setTimeout(() => (showResults = false), 200)"
           type="text"
           placeholder="Поиск пользователей"
           class="search-input"
@@ -134,21 +162,26 @@ function isFoundUser(userId) {
               class="search-result-item"
             >
               <img
-                :src="user.avatar ? `http://localhost:5000${user.avatar}` : '/img/foto.jpg'"
+                :src="getUserAvatarUrl(user.avatar)"
                 :alt="user.username"
                 class="result-avatar"
                 @click="goToProfile(user.username)"
               />
               <div class="result-info" @click="goToProfile(user.username)">
                 <span class="result-username">{{ user.username }}</span>
-                <span class="result-fullname" v-if="user.fullName">{{ user.fullName }}</span>
+                <span class="result-fullname" v-if="user.fullName">{{
+                  user.fullName
+                }}</span>
               </div>
               <button
                 v-if="user._id !== authStore.currentUser?._id"
-                :class="['follow-btn', { following: isFollowingUser(user._id) }]"
+                :class="[
+                  'follow-btn',
+                  { following: isFollowingUser(user._id) },
+                ]"
                 @click.stop="followFromSearch(user)"
               >
-                {{ isFollowingUser(user._id) ? 'Вы подписаны' : 'Подписаться' }}
+                {{ isFollowingUser(user._id) ? "Вы подписаны" : "Подписаться" }}
               </button>
             </div>
           </div>
@@ -168,9 +201,9 @@ function isFoundUser(userId) {
           :key="account.id"
           class="suggested-item"
         >
-          <img 
-            :src="account.avatar || '/img/foto.jpg'" 
-            :alt="account.username" 
+          <img
+            :src="account.avatar || '/img/foto.jpg'"
+            :alt="account.username"
             class="suggested-avatar"
             @click="goToProfile(account.username)"
           />
@@ -179,10 +212,13 @@ function isFoundUser(userId) {
             <span class="suggested-subtitle">{{ account.subtitle }}</span>
           </div>
           <button
-            :class="['follow-btn', { following: isFollowingSuggested(account) }]"
+            :class="[
+              'follow-btn',
+              { following: isFollowingSuggested(account) },
+            ]"
             @click="followSuggested(account)"
           >
-            {{ isFollowingSuggested(account) ? 'Вы подписаны' : 'Подписаться' }}
+            {{ isFollowingSuggested(account) ? "Вы подписаны" : "Подписаться" }}
           </button>
         </div>
       </div>
@@ -190,11 +226,7 @@ function isFoundUser(userId) {
 
     <!-- Пустая сетка для визуального заполнения -->
     <div v-if="!searchQuery" class="explore-grid">
-      <div
-        v-for="i in 9"
-        :key="i"
-        class="explore-item"
-      >
+      <div v-for="i in 9" :key="i" class="explore-item">
         <img :src="`/img/foto${(i % 3) + 1}.jpg`" :alt="'Explore ' + i" />
       </div>
     </div>

@@ -22,16 +22,6 @@ const updateProfileValidation = [
   body("website").optional().trim().isURL(),
 ];
 
-// DEBUG: просмотр всех пользователей (удалить в продакшене!)
-router.get("/", async (req, res) => {
-  try {
-    const users = await User.find().select("-password").lean();
-    res.json({ count: users.length, users });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 router.get("/search", protect, searchUsers);
 router.get("/:username", optionalAuth, getUserProfile);
 router.put("/profile", protect, updateProfileValidation, updateProfile);

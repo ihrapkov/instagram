@@ -74,7 +74,34 @@ const router = createRouter({
 });
 
 // Глобальная защита маршрутов
-router.beforeEach((to, from, next) => {
+let authReady = false;
+let authCheckPromise = null;
+
+export function setAuthReady() {
+  authReady = true;
+}
+
+export function waitForAuth() {
+  if (authReady) return Promise.resolve();
+  if (!authCheckPromise) {
+    authCheckPromise = new Promise((resolve) => {
+      const unwatch = router.afterEach(() => {
+        if (authReady) {
+          unwatch();
+          resolve();
+        }
+      });
+    });
+  }
+  return authCheckPromise;
+}
+
+router.beforeEach(async (to, from, next) => {
+  // Ждём завершения checkAuth при первой навигации
+  if (!authReady) {
+    await waitForAuth();
+  }
+
   const isAuthenticated = localStorage.getItem("isAuthenticated");
 
   if (to.meta.requiresAuth && !isAuthenticated) {

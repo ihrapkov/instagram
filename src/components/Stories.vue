@@ -4,6 +4,8 @@ import { useStoriesStore } from "@/stores/stories";
 import { useAuthStore } from "@/stores/auth";
 import { storyAPI } from "@/api/axios";
 import StoryCarousel from "@/components/StoryCarousel.vue";
+import { assetUrl } from "@/utils/url";
+import { notifyError } from "@/utils/notify";
 
 const storiesStore = useStoriesStore();
 const authStore = useAuthStore();
@@ -108,7 +110,7 @@ async function uploadStory(file) {
       });
     }
   } else {
-    alert(result.message);
+    notifyError(result.message);
   }
 
   // Очищаем input
@@ -118,9 +120,7 @@ async function uploadStory(file) {
 }
 
 const avatarUrl = (avatar) => {
-  if (!avatar) return "/img/foto.jpg";
-  if (avatar.startsWith("http")) return avatar;
-  return `http://localhost:5000${avatar}`;
+  return assetUrl(avatar);
 };
 
 // Проверка, просмотрена ли история

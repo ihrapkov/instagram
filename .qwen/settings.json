@@ -25,7 +25,10 @@
       "Bash(git rm *)",
       "Bash(del *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(tasklist *)",
+      "Bash(npx *)",
+      "Bash(powershell *)"
     ]
   },
   "$version": 3

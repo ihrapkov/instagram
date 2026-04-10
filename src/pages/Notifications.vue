@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useAuthStore } from "@/stores/auth";
 import { userAPI } from "@/api/axios";
+import { assetUrl } from "@/utils/url";
 
 const router = useRouter();
 const notificationsStore = useNotificationsStore();
@@ -29,7 +30,6 @@ function goToProfile(username) {
 // Переход к посту
 function goToPost(postId) {
   // Пока просто закрываем уведомление
-  console.log("Post:", postId);
 }
 
 // Подписка на пользователя
@@ -123,6 +123,15 @@ function timeAgo(date) {
   return `${diffDays} д.`;
 }
 
+// Хелперы для шаблона
+function getSenderAvatarUrl(avatar) {
+  return assetUrl(avatar);
+}
+
+function getPostImageUrl(image) {
+  return assetUrl(image);
+}
+
 onMounted(() => {
   loadNotifications();
 });
@@ -198,11 +207,7 @@ onMounted(() => {
           @click.stop="goToProfile(notification.sender.username)"
         >
           <img
-            :src="
-              notification.sender.avatar
-                ? `http://localhost:5000${notification.sender.avatar}`
-                : '/img/foto.jpg'
-            "
+            :src="getSenderAvatarUrl(notification.sender.avatar)"
             :alt="notification.sender.username"
           />
         </div>
@@ -226,10 +231,7 @@ onMounted(() => {
           class="notification-post"
           @click.stop="goToPost(notification.post._id)"
         >
-          <img
-            :src="`http://localhost:5000${notification.post.image}`"
-            alt="Post"
-          />
+          <img :src="getPostImageUrl(notification.post.image)" alt="Post" />
         </div>
         <div
           v-else-if="notification.type === 'follow' && notification.sender"

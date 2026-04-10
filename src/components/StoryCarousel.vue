@@ -1,96 +1,102 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useStoriesStore } from '@/stores/stories'
-import { useAuthStore } from '@/stores/auth'
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useStoriesStore } from "@/stores/stories";
+import { useAuthStore } from "@/stores/auth";
+import { assetUrl } from "@/utils/url";
 
-const storiesStore = useStoriesStore()
-const authStore = useAuthStore()
+const storiesStore = useStoriesStore();
+const authStore = useAuthStore();
 
-const carouselContainer = ref(null)
-const currentIndex = ref(0)
+const carouselContainer = ref(null);
+const currentIndex = ref(0);
 
 // Текущий пользователь
-const currentUser = computed(() => authStore.currentUser)
+const currentUser = computed(() => authStore.currentUser);
 
 // Все истории пользователя
 const userStories = computed(() => {
-  return storiesStore.storiesFeed.find(s => s.user.username === storiesStore.currentUsername)
-})
+  return storiesStore.storiesFeed.find(
+    (s) => s.user.username === storiesStore.currentUsername,
+  );
+});
 
 // Все пользователи с историями
-const usersWithStories = computed(() => storiesStore.storiesFeed)
+const usersWithStories = computed(() => storiesStore.storiesFeed);
 
 // Текущий пользователь в карусели
 const currentUserStory = computed(() => {
-  if (!userStories.value) return null
-  return userStories.value.user
-})
+  if (!userStories.value) return null;
+  return userStories.value.user;
+});
 
 // Истории текущего пользователя
 const stories = computed(() => {
-  if (!userStories.value) return []
-  return userStories.value.stories
-})
+  if (!userStories.value) return [];
+  return userStories.value.stories;
+});
 
 // Можно ли прокручивать
-const canGoPrev = computed(() => currentIndex.value > 0)
-const canGoNext = computed(() => currentIndex.value < stories.value.length - 1)
+const canGoPrev = computed(() => currentIndex.value > 0);
+const canGoNext = computed(() => currentIndex.value < stories.value.length - 1);
 
 // URL истории
 const storyUrl = computed(() => {
-  if (!stories.value[currentIndex.value]) return ''
-  const url = stories.value[currentIndex.value].image
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:5000${url}`
-})
+  if (!stories.value[currentIndex.value]) return "";
+  const url = stories.value[currentIndex.value].image;
+  return assetUrl(url, "");
+});
+
+// Хелпер для шаблона
+function getAvatarUrl(avatar) {
+  return assetUrl(avatar);
+}
 
 // Переход к следующей истории
 function nextStory() {
   if (canGoNext.value) {
-    currentIndex.value++
-    markAsViewed()
+    currentIndex.value++;
+    markAsViewed();
   } else {
     // Закрываем карусель
-    closeCarousel()
+    closeCarousel();
   }
 }
 
 // Переход к предыдущей истории
 function prevStory() {
   if (canGoPrev.value) {
-    currentIndex.value--
-    markAsViewed()
+    currentIndex.value--;
+    markAsViewed();
   }
 }
 
 // Отметить как просмотренную
 function markAsViewed() {
   if (currentUserStory.value) {
-    storiesStore.markAsViewed(currentUserStory.value.username)
+    storiesStore.markAsViewed(currentUserStory.value.username);
   }
 }
 
 // Закрытие карусели
 function closeCarousel() {
-  storiesStore.closeViewer()
+  storiesStore.closeViewer();
 }
 
 // Обработка клавиш
 function handleKeydown(e) {
-  if (e.key === 'ArrowRight') nextStory()
-  if (e.key === 'ArrowLeft') prevStory()
-  if (e.key === 'Escape') closeCarousel()
+  if (e.key === "ArrowRight") nextStory();
+  if (e.key === "ArrowLeft") prevStory();
+  if (e.key === "Escape") closeCarousel();
 }
 
 onMounted(() => {
-  document.addEventListener('keydown', handleKeydown)
-  markAsViewed()
-})
+  document.addEventListener("keydown", handleKeydown);
+  markAsViewed();
+});
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown)
-})
+  document.removeEventListener("keydown", handleKeydown);
+});
 </script>
 
 <template>
@@ -104,9 +110,7 @@ onUnmounted(() => {
       <!-- Информация о пользователе -->
       <div class="user-info">
         <img
-          :src="currentUserStory?.avatar?.startsWith('http')
-            ? currentUserStory?.avatar
-            : `http://localhost:5000${currentUserStory?.avatar || '/img/foto.jpg'}`"
+          :src="getAvatarUrl(currentUserStory?.avatar)"
           :alt="currentUserStory?.username"
           class="user-avatar"
         />
